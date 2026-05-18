@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#0056D2">
+<title>Elaraby AI v4.6 Enterprise Backend — مساعد المبيعات الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --brand-1:#0056D2; --brand-2:#00B4D8; --brand-accent:#06D6A0;
+  --bg:#EEF2F7; --surface:#fff; --surface-2:#F4F7FA; --surface-3:#EBF0F8;
+  --border:rgba(0,86,210,.12); --text:#0D1B2A; --text-sec:#4A6FA5;
+  --user-bg:linear-gradient(135deg,#0056D2,#00B4D8);
+  --bot-bg:#fff; --bot-border:rgba(0,86,210,.1);
+  --shadow-sm:0 2px 8px rgba(0,86,210,.08);
+  --shadow-md:0 8px 32px rgba(0,86,210,.15);
+  --shadow-lg:0 20px 60px rgba(0,86,210,.2);
+  --header:linear-gradient(135deg,#003FA3 0%,#0056D2 50%,#0096C7 100%);
+  --input-bg:#F4F7FA; --scrollbar:#C8D8F0;
+  --price-bg:#DCFCE7; --price-c:#065F46; --price-b:#A7F3D0;
+  --intent-bg:rgba(0,86,210,.06);
+  --ac-bg:#fff; --ac-border:rgba(0,86,210,.18); --ac-hover:rgba(0,86,210,.06);
+  --lb-bg:rgba(0,0,0,.92);
+  --quick-bg:rgba(0,86,210,.07); --quick-border:rgba(0,86,210,.2); --quick-c:var(--brand-1);
+}
+[data-theme="dark"] {
+  --bg:#0A0F1E; --surface:#121929; --surface-2:#1A2540; --surface-3:#1F2D4A;
+  --border:rgba(0,180,216,.15); --text:#E8F0FE; --text-sec:#7EB8E6;
+  --bot-bg:#1A2540; --bot-border:rgba(0,180,216,.2);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.4); --shadow-md:0 8px 32px rgba(0,0,0,.5);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.6);
+  --header:linear-gradient(135deg,#050C1A,#0A1628,#0D1F3C);
+  --input-bg:#1A2540; --scrollbar:#2A3A5C;
+  --price-bg:rgba(6,95,70,.3); --price-c:#6EE7B7; --price-b:rgba(110,231,183,.3);
+  --intent-bg:rgba(0,180,216,.06);
+  --ac-bg:#1A2540; --ac-border:rgba(0,180,216,.2); --ac-hover:rgba(0,180,216,.08);
+  --lb-bg:rgba(0,0,0,.96);
+  --quick-bg:rgba(0,180,216,.08); --quick-border:rgba(0,180,216,.25); --quick-c:var(--brand-2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+
+.fab{position:fixed;bottom:28px;left:28px;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:var(--shadow-md);z-index:1100;transition:transform .35s;animation:fab-pulse 2.5s ease-in-out infinite}
+.fab:hover{transform:scale(1.1)}.fab.hidden{transform:scale(0);opacity:0;pointer-events:none}
+@keyframes fab-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,180,216,.5),var(--shadow-md)}50%{box-shadow:0 0 0 16px rgba(0,180,216,0),var(--shadow-md)}}
+.fab-badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;background:#FF4757;border-radius:50%;border:2px solid var(--bg);font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;color:#fff}
+
+.chat-wrapper{position:fixed;bottom:108px;left:28px;width:460px;height:720px;max-width:calc(100vw - 40px);max-height:calc(100vh - 130px);background:var(--surface);border-radius:24px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;z-index:1099;opacity:0;transform:translateY(24px) scale(.94);pointer-events:none;transition:opacity .38s,transform .38s;border:1px solid var(--border)}
+.chat-wrapper.open{opacity:1;transform:none;pointer-events:all}
+@media(max-width:520px){.chat-wrapper{left:0;bottom:0;width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;border-radius:0}.fab{bottom:18px;left:18px}}
+
+.chat-header{background:var(--header);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-avatar{width:42px;height:42px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;border:2px solid rgba(255,255,255,.3)}
+.header-info h5{font-family:'Tajawal',sans-serif;font-weight:800;font-size:16px;color:#fff;margin:0;line-height:1.2}
+.header-info small{font-size:11px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:4px}
+.header-actions{display:flex;align-items:center;gap:6px}
+.header-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .2s,transform .2s}
+.header-btn:hover{background:rgba(255,255,255,.25);transform:scale(1.05)}.header-btn.close:hover{transform:rotate(90deg) scale(1.05)}
+
+.chat-toolbar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.chat-toolbar::-webkit-scrollbar{display:none}
+.tool-chip{display:flex;align-items:center;gap:5px;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:700;color:var(--text-sec);cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.tool-chip:hover{background:var(--brand-1);color:#fff;border-color:var(--brand-1)}
+
+.tts-controls{display:none;align-items:center;gap:8px;padding:6px 10px;background:var(--surface-2);border-bottom:1px solid var(--border);flex-shrink:0}
+.tts-controls.show{display:flex}
+.tts-controls select,.tts-controls input[type=range]{font-size:11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);padding:2px 6px;outline:none}
+.tts-controls label{font-size:11px;font-weight:700;color:var(--text-sec);white-space:nowrap}
+
+.chat-body{flex:1;overflow-y:auto;padding:18px 14px;background:var(--surface-2);scroll-behavior:smooth}
+.chat-body::-webkit-scrollbar{width:4px}.chat-body::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:4px}
+
+.msg-row{display:flex;align-items:flex-end;gap:9px;margin-bottom:16px;animation:msg-in .35s both}
+@keyframes msg-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.msg-row.user{flex-direction:row-reverse}
+.msg-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-bottom:2px}
+.msg-avatar.bot{background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff}
+.msg-avatar.user{background:linear-gradient(135deg,#CBD5E1,#94A3B8);color:#1e293b}
+.bubble{max-width:calc(100% - 48px);padding:12px 15px;font-size:14.5px;font-weight:600;line-height:1.75;word-break:break-word}
+.bubble.user{background:var(--user-bg);color:#fff;border-radius:18px 4px 18px 18px;box-shadow:0 8px 22px -8px rgba(0,86,210,.45)}
+.bubble.bot{background:var(--bot-bg);color:var(--text);border-radius:4px 18px 18px 18px;border:1px solid var(--bot-border);box-shadow:var(--shadow-sm);text-align:right}
+.bubble.bot h3,.bubble.bot h4{color:var(--brand-1);font-weight:800;margin:12px 0 8px}
+[data-theme="dark"] .bubble.bot h3,[data-theme="dark"] .bubble.bot h4{color:var(--brand-2)}
+.bubble.bot strong{color:var(--brand-1)}[data-theme="dark"] .bubble.bot strong{color:var(--brand-2)}
+.bubble.bot ul{padding-right:22px;margin:8px 0 12px}
+.price-tag{display:inline-flex;align-items:center;gap:5px;background:var(--price-bg);color:var(--price-c);padding:4px 12px;border-radius:8px;font-weight:800;border:1px solid var(--price-b);font-size:14px}
+
+.msg-actions{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.msg-action-btn{display:flex;align-items:center;gap:4px;padding:3px 9px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:700;color:var(--text-sec);cursor:pointer;transition:all .2s}
+.msg-action-btn:hover{background:var(--brand-1);color:#fff}
+.msg-action-btn.playing{background:var(--brand-accent);color:#fff;border-color:var(--brand-accent)}
+
+.quick-actions{display:flex;flex-wrap:wrap;gap:7px}
+.quick-action-btn{padding:7px 14px;background:var(--quick-bg);border:1.5px solid var(--quick-border);border-radius:999px;font-size:12.5px;font-weight:700;color:var(--quick-c);cursor:pointer;transition:all .22s;white-space:nowrap}
+.quick-action-btn:hover{background:var(--brand-1);color:#fff;transform:translateY(-1px)}
+
+.pro-comp-container { display: flex; gap: 10px; margin-top: 15px; direction: rtl; }
+.pro-comp-card { flex: 1; background: var(--surface); border: 2px solid var(--border); border-radius: 14px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.3s; }
+.pro-comp-card.internal:hover { border-color: #3b82f6; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); }
+.pro-comp-card.external:hover { border-color: #f59e0b; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15); }
+.pro-comp-icon { width: 45px; height: 45px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
+.pro-comp-card.internal .pro-comp-icon { background: #eff6ff; color: #3b82f6; }
+.pro-comp-card.external .pro-comp-icon { background: #fffbeb; color: #f59e0b; }
+.pro-comp-card h4 { margin: 0 0 6px; font-size: 13.5px; font-weight: 800; }
+.pro-comp-card p { margin: 0; color: var(--text-sec); font-size: 11px; font-weight: 600; }
+
+.ai-compare-table-wrapper { width: 100%; overflow-x: auto; margin: 15px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+.ai-compare-table { width: 100%; min-width: 420px; border-collapse: collapse; font-size: 12.5px; direction: rtl; }
+.ai-compare-table th, .ai-compare-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); text-align: center; vertical-align: middle; }
+.ai-compare-table th { background: linear-gradient(135deg, var(--brand-1), var(--brand-2)); color: white; font-weight: 650; }
+.ai-compare-table td:first-child, .ai-compare-table th:first-child { width: 28%; background: var(--surface-2); font-weight: 700; color: var(--brand-1); text-align: right; border-left: 2px solid var(--border); }
+.ai-compare-table tr:nth-child(even) td { background-color: rgba(0, 86, 210, 0.01); }
+[data-theme="dark"] .ai-compare-table td:first-child { background-color: #1A2540; color: var(--brand-2); }
+@media (max-width: 520px) {
+  .msg-row.has-table { display: block; margin-left: -14px; margin-right: -14px; width: calc(100% + 28px); }
+  .msg-row.has-table .msg-avatar { display: none; }
+  .msg-row.has-table .bubble.bot { max-width: 100% !important; width: 100% !important; border-radius: 0; border: none; padding: 10px 0; }
+  .msg-row.has-table .ai-compare-table-wrapper { border-radius: 0; border-left: none; border-right: none; margin: 0; }
+}
+
+.typing-indicator{display:flex;align-items:center;gap:5px;padding:4px 2px}
+.dot{width:6px;height:6px;background:var(--brand-2);border-radius:50%;animation:bounce 1.4s infinite both}
+.dot:nth-child(1){animation-delay:-.32s}.dot:nth-child(2){animation-delay:-.16s}
+@keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.5}40%{transform:scale(1);opacity:1}}
+.skeleton{background:linear-gradient(90deg,var(--border) 25%,rgba(0,86,210,.06) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:12px;margin-bottom:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.ac-wrapper{position:relative;width:100%}
+.ac-dropdown{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--ac-bg);border:1.5px solid var(--ac-border);border-radius:14px;box-shadow:var(--shadow-md);max-height:240px;overflow-y:auto;z-index:200;display:none}
+.ac-dropdown.open{display:block}
+.ac-item{display:flex;align-items:center;gap:10px;padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--border)}
+.ac-item:hover{background:var(--ac-hover)}
+.ac-item-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0}
+.ac-item-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-item-price{font-weight:700;color:var(--price-c);font-size:11px}
+.ac-empty{padding:12px;color:var(--text-sec);font-size:13px;font-weight:700;text-align:center}
+
+.chat-footer{padding:14px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.input-row{display:flex;align-items:center;gap:8px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:26px;padding:6px 6px 6px 16px;transition:border-color .22s}
+.input-row:focus-within{border-color:var(--brand-1);box-shadow:0 0 0 4px rgba(0,86,210,.12)}
+.message-input{flex:1;background:transparent;border:none;outline:none;font-family:'Cairo',sans-serif;font-size:14.5px;font-weight:600;color:var(--text);min-height:36px;resize:none;max-height:100px}
+.footer-btn{width:40px;height:40px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .25s;flex-shrink:0}
+.footer-btn.send{background:linear-gradient(135deg,var(--brand-1),var(--brand-2));color:#fff;box-shadow:0 6px 18px -4px rgba(0,86,210,.5)}
+.footer-btn.send:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.footer-btn.mic{background:var(--surface);color:var(--text-sec);border:1.5px solid var(--border)}
+
+.product-gallery{border-radius:14px;overflow:hidden;background:var(--surface-3);border:1px solid var(--border);margin:10px 0;}
+.gallery-main{position:relative;width:100%;padding-bottom:66%;background:#f0f0f0;overflow:hidden; cursor: pointer;}
+.gallery-main-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+
+.lightbox{position:fixed;inset:0;background:var(--lb-bg);z-index:9000;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .28s}
+.lightbox.open{display:flex;opacity:1}
+.lightbox-inner{position:relative;max-width:100vw;max-height:100vh;display:flex;align-items:center;justify-content:center;width:100%;height:100%;overflow:hidden;}
+.lightbox-img{max-width:95vw;max-height:88vh;object-fit:contain;border-radius:10px;transform:scale(1);}
+.lb-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:9001}
+
+.scroll-down-btn{position:absolute;bottom:14px;left:50%;transform:translateX(-50%) translateY(10px);background:linear-gradient(135deg, var(--brand-1), var(--brand-2));color:#fff;border:none;border-radius:999px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:10;box-shadow:0 10px 28px -8px rgba(0,86,210,.5)}
+.scroll-down-btn.show{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
+
+.copy-toast{position:fixed;bottom:30px;right:50%;transform:translateX(50%) translateY(20px);background:#1e293b;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;}
+.copy-toast.show{opacity:1;transform:translateX(50%) translateY(0)}
+
+.listening-banner{display:none;}
+</style>
+
+</head>
+<body>
+
+<button class="fab" id="fabBtn" aria-label="فتح المساعد العربى"><i class="fas fa-headset"></i><span class="fab-badge" id="fabBadge">1</span></button>
+
+<div class="chat-wrapper" id="chatWrapper" role="dialog">
+  <div class="chat-header">
+    <div class="header-left">
+      <div class="header-avatar"><i class="fas fa-bolt"></i></div>
+      <div class="header-info">
+        <h5>العربى | مساعد المبيعات <small class="memory-pill" id="memPill" style="display:none"><i class="fas fa-brain"></i> ذاكرة</small></h5>
+        <small id="dbStatus"><i class="fas fa-circle-notch fa-spin"></i> جاري التهيئة...</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" id="toggleThemeBtn"><i class="fas fa-moon" id="themeIcon"></i></button>
+      <button class="header-btn" id="clearChatBtn"><i class="fas fa-trash-can"></i></button>
+      <button class="header-btn close" id="closeChatBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <div class="chat-toolbar">
+    <button class="tool-chip" onclick="insertChip('قارن بين ')"><i class="fas fa-scale-balanced"></i> مقارنة</button>
+    <button class="tool-chip" onclick="insertChip('سعر ')"><i class="fas fa-tag"></i> السعر</button>
+    <button class="tool-chip" onclick="insertChip('مواصفات ')"><i class="fas fa-list-check"></i> مواصفات</button>
+    <button class="tool-chip" onclick="insertChip('صور ')"><i class="fas fa-images"></i> الصور</button>
+    <button class="tool-chip" onclick="insertChip('أفضل بديل لـ ')"><i class="fas fa-star"></i> أفضل بديل</button>
+    <button class="tool-chip" onclick="insertChip('أقنعني بشراء ')"><i class="fas fa-magic"></i> إقناع بيعي</button>
+  </div>
+
+  <div class="tts-controls show" id="ttsPanel">
+    <label><i class="fas fa-microphone-lines"></i></label>
+    <select id="voiceSelect" style="flex:1;min-width:0"></select>
+    <label>السرعة:</label>
+    <input type="range" id="speedControl" min="0.6" max="1.8" step="0.1" value="1" style="width:70px">
+    <span id="speedVal" style="font-size:11px;font-weight:700;color:var(--text-sec)">1×</span>
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="autoReadToggle"> تلقائي</label>
+  </div>
+
+  <div class="chat-body" id="chatWindow" role="log" aria-live="polite">
+    <div class="msg-row bot" id="welcomeRow">
+      <div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
+      <div style="width:100%">
+        <div class="bubble bot" id="welcomeMsg">
+          <div class="skeleton" style="width:80%"></div>
+          <div class="skeleton" style="width:60%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="scroll-down-btn" id="scrollDownBtn"><i class="fas fa-chevron-down"></i> رسائل جديدة</button>
+
+  <div class="chat-footer">
+    <div class="listening-banner" id="listeningBanner">
+      <i class="fas fa-waveform-lines"></i>
+      <span id="interimText">جاري الاستماع...</span>
+    </div>
+    <div class="ac-wrapper">
+      <div class="ac-dropdown" id="acDropdown"></div>
+      <div class="input-row">
+        <button class="footer-btn send" id="sendButton" disabled><i class="fas fa-paper-plane"></i></button>
+        <textarea class="message-input" id="messageInput" placeholder="اكتب اسم المنتج أو الموديل..." rows="1" disabled dir="auto"></textarea>
+        <button class="footer-btn mic" id="micButton"><i class="fas fa-microphone"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose"><i class="fas fa-xmark"></i></button>
+  <button class="lb-nav lb-prev" id="lbPrev"><i class="fas fa-chevron-right"></i></button>
+  <button class="lb-nav lb-next" id="lbNext"><i class="fas fa-chevron-left"></i></button>
+  <div class="lightbox-inner" id="lbInner">
+    <img class="lightbox-img" id="lbImg" src="">
+  </div>
+</div>
+
+<div class="copy-toast" id="copyToast">تم النسخ ✓</div>
+
+<script>
+const STATE = {
+  sessionId: localStorage.getItem("zeko_sid") || (()=>{ let id = crypto.randomUUID(); localStorage.setItem("zeko_sid", id); return id; })(),
+  theme: localStorage.getItem("zeko_theme") || "light",
+  isStreaming: false,
+  pendingAction: null,
+  lbImages: [], lbIndex: 0, lbScale: 1
+};
+
+const UI = {
+  addMessage(text, isUser, loading=false, id=null, isRawHTML=false) {
+    const row = document.createElement("div");
+    row.className = `msg-row ${isUser ? "user" : "bot"}`;
+    if (id) row.id = id;
+
+    const avatar = `<div class="msg-avatar ${isUser?"user":"bot"}"><i class="fas ${isUser?"fa-user":(loading?"fa-circle-notch fa-spin":"fa-robot")}"></i></div>`;
+    const content = loading ? `<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>` : (isUser ? `<span dir="auto">${this.escape(text)}</span>` : `<div dir="auto">${isRawHTML ? text : marked.parse(text)}</div>`);
+    
+    const actions = (!isUser && !loading && !isRawHTML) ? `<div class="msg-actions"><button class="msg-action-btn" onclick="UI.handleTTS(this)"><i class="fas fa-volume-high"></i> استمع</button><button class="msg-action-btn" onclick="UI.copyBubble(this)"><i class="fas fa-copy"></i> نسخ</button></div>` : "";
+    
+    row.innerHTML = isUser ? `<div><div class="bubble user">${content}</div></div>${avatar}` : `${avatar}<div style="width:100%"><div class="bubble bot">${content}</div>${actions}</div>`;
+    document.getElementById("chatWindow").appendChild(row);
+    this.scrollToBottom();
+    return row;
+  },
+  escape(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); },
+  scrollToBottom() {
+    const el = document.getElementById("chatWindow");
+    el.scrollTop = el.scrollHeight;
+  },
+  showQuickActions(name) {
+    const row = document.createElement("div");
+    row.className = "msg-row bot";
+    row.innerHTML = `<div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
+      <div style="width:100%"><div class="bubble bot" dir="auto">
+        <strong>اخترت: ${this.escape(name)}</strong><br>
+        <div class="quick-actions" style="margin-top:10px">
+          <button class="quick-action-btn" onclick="insertChip('سعر ${this.escape(name)}')">السعر</button>
+          <button class="quick-action-btn" onclick="insertChip('مواصفات ${this.escape(name)}')">المواصفات</button>
+          <button class="quick-action-btn" onclick="UI.askCompare('${this.escape(name)}')">مقارنة</button>
+        </div>
+      </div></div>`;
+    document.getElementById("chatWindow").appendChild(row);
+    this.scrollToBottom();
+  },
+  askCompare(name) {
+    const row = document.createElement("div");
+    row.className = "msg-row bot";
+    row.innerHTML = `<div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
+      <div style="width:100%"><div class="bubble bot" dir="auto">
+        <strong>مقارنة المنتج:</strong> ${name}<br>
+        <div class="pro-comp-container">
+            <div class="pro-comp-card internal" onclick="UI.startCompare('LOCAL_COMPARE', '${name}')">
+                <div class="pro-comp-icon"><i class="fas fa-store"></i></div><h4>منتج من العربى</h4>
+            </div>
+            <div class="pro-comp-card external" onclick="UI.startCompare('AI_COMPARE', '${name}')">
+                <div class="pro-comp-icon"><i class="fas fa-globe"></i></div><h4>منافس خارجي</h4>
+            </div>
+        </div>
+      </div></div>`;
+    document.getElementById("chatWindow").appendChild(row);
+    this.scrollToBottom();
+  },
+  startCompare(type, name) {
+    STATE.pendingAction = { type: type, productA: name };
+    const inp = document.getElementById("messageInput");
+    inp.placeholder = type === 'LOCAL_COMPARE' ? "اكتب المنتج الثاني من العربي..." : "اكتب اسم الماركة والموديل المنافس...";
+    inp.focus();
+  },
+  buildGallery(product) {
+    const imgs = product.images || [];
+    if(!imgs.length) return `<div class="bubble bot">لا توجد صور.</div>`;
+    return `<div class="bubble bot" style="padding:8px">
+      <strong>📷 ${this.escape(product.name)}</strong>
+      <div class="product-gallery" onclick="openLightbox('${imgs[0]}')">
+        <div class="gallery-main"><img class="gallery-main-img" src="${imgs[0]}"></div>
+      </div>
+    </div>`;
+  },
+  handleTTS(btn) {
+    const txt = btn.closest(".msg-row").querySelector(".bubble").innerText;
+    TTSModule.toggle(txt, btn);
+  },
+  copyBubble(btn) {
+    const txt = btn.closest(".msg-row").querySelector(".bubble").innerText;
+    navigator.clipboard.writeText(txt);
+    document.getElementById("copyToast").classList.add("show");
+    setTimeout(()=>document.getElementById("copyToast").classList.remove("show"), 2000);
+  }
+};
+
+async function sendMessage() {
+  const inp = document.getElementById("messageInput");
+  const text = inp.value.trim();
+  if(!text || STATE.isStreaming) return;
+  
+  inp.value = "";
+  inp.style.height = "auto";
+  document.getElementById("acDropdown").classList.remove("open");
+  UI.addMessage(text, true);
+  
+  STATE.isStreaming = true;
+  document.getElementById("sendButton").innerHTML = '<i class="fas fa-stop"></i>';
+  
+  const botRowId = "bot-"+Date.now();
+  const botRow = UI.addMessage("", false, true, botRowId);
+  const botBubble = botRow.querySelector(".bubble.bot");
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text: text, session_id: STATE.sessionId, pending_action: STATE.pendingAction})
+    });
+    
+    STATE.pendingAction = null;
+    inp.placeholder = "اكتب اسم المنتج أو الموديل...";
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    botBubble.innerHTML = "";
+    
+    while(true) {
+      const {done, value} = await reader.read();
+      if(done) break;
+      const chunks = decoder.decode(value).split("\n\n");
+      
+      for(let chunk of chunks) {
+        if(!chunk.startsWith("data: ")) continue;
+        const dataStr = chunk.substring(6).trim();
+        if(!dataStr) continue;
+        
+        const data = JSON.parse(dataStr);
+        if(data.type === 'token') {
+          fullText += data.text;
+          botBubble.innerHTML = `<div dir="auto">${marked.parse(fullText)}</div>`;
+          UI.scrollToBottom();
+        } else if (data.type === 'local') {
+          if (data.is_table) botRow.classList.add("has-table");
+          botBubble.innerHTML = `<div dir="auto">${data.html}</div>`;
+          fullText = botBubble.innerText;
+          UI.scrollToBottom();
+        } else if (data.type === 'gallery') {
+          botRow.querySelector('div[style="width:100%"]').innerHTML = UI.buildGallery(data.product);
+          UI.scrollToBottom();
+        } else if (data.type === 'done') {
+          break;
+        }
+      }
+    }
+    
+    if(fullText && document.getElementById("autoReadToggle").checked) TTSModule.speak(fullText);
+    if(fullText && !botRow.querySelector('.msg-actions')) {
+      botRow.querySelector('div[style="width:100%"]').insertAdjacentHTML('beforeend', `<div class="msg-actions"><button class="msg-action-btn" onclick="UI.handleTTS(this)"><i class="fas fa-volume-high"></i> استمع</button><button class="msg-action-btn" onclick="UI.copyBubble(this)"><i class="fas fa-copy"></i> نسخ</button></div>`);
+    }
+
+  } catch(e) {
+    botBubble.innerHTML = `<div class="error-notice">خطأ في الاتصال بالخادم.</div>`;
+  }
+  
+  STATE.isStreaming = false;
+  document.getElementById("sendButton").innerHTML = '<i class="fas fa-paper-plane"></i>';
+}
+
+// STT & TTS & Autocomplete setup
+const TTSModule = {
+  init() {
+    speechSynthesis.onvoiceschanged = () => {
+      const vs = document.getElementById("voiceSelect");
+      vs.innerHTML = "";
+      speechSynthesis.getVoices().forEach((v,i) => {
+        vs.insertAdjacentHTML('beforeend', `<option value="${i}">${v.name}</option>`);
+      });
+    };
+  },
+  speak(txt, btn=null) {
+    speechSynthesis.cancel();
+    const clean = txt.replace(/[*_#`|[\]]/g,"").trim();
+    const u = new SpeechSynthesisUtterance(clean);
+    u.rate = document.getElementById("speedControl").value;
+    const vIdx = document.getElementById("voiceSelect").value;
+    if(vIdx) u.voice = speechSynthesis.getVoices()[vIdx];
+    if(btn) { btn.classList.add('playing'); u.onend = () => btn.classList.remove('playing'); }
+    speechSynthesis.speak(u);
+  },
+  toggle(txt, btn) {
+    if(btn.classList.contains('playing')) { speechSynthesis.cancel(); btn.classList.remove('playing'); }
+    else this.speak(txt, btn);
+  }
+};
+
+let debounceTimer;
+document.getElementById("messageInput").addEventListener("input", e => {
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
+  
+  clearTimeout(debounceTimer);
+  const q = e.target.value.trim();
+  if(q.length < 2) { document.getElementById("acDropdown").classList.remove("open"); return; }
+  
+  debounceTimer = setTimeout(async () => {
+    const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}`);
+    const results = await res.json();
+    const dd = document.getElementById("acDropdown");
+    if(!results.length) { dd.innerHTML="<div class='ac-empty'>لا توجد نتائج</div>"; }
+    else {
+      dd.innerHTML = results.map(p => `<div class="ac-item" onclick="insertChip('${p.name}'); UI.showQuickActions('${p.name}')"><div class="ac-item-icon"><i class="fas fa-box"></i></div><div class="ac-item-body"><div class="ac-item-name">${p.name}</div><div class="ac-item-price">${p.price}</div></div></div>`).join("");
+    }
+    dd.classList.add("open");
+  }, 200);
+});
+
+function insertChip(val) {
+  const i = document.getElementById("messageInput");
+  i.value = val; i.focus();
+  document.getElementById("acDropdown").classList.remove("open");
+}
+
+function openLightbox(src) {
+  document.getElementById("lbImg").src = src;
+  document.getElementById("lightbox").classList.add("open");
+}
+document.getElementById("lbClose").onclick = () => document.getElementById("lightbox").classList.remove("open");
+
+// Events
+document.getElementById("sendButton").onclick = sendMessage;
+document.getElementById("messageInput").onkeydown = e => { if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); } };
+document.getElementById("fabBtn").onclick = () => { document.getElementById("chatWrapper").classList.add("open"); document.getElementById("fabBtn").classList.add("hidden"); };
+document.getElementById("closeChatBtn").onclick = () => { document.getElementById("chatWrapper").classList.remove("open"); document.getElementById("fabBtn").classList.remove("hidden"); };
+document.getElementById("toggleThemeBtn").onclick = () => {
+  STATE.theme = STATE.theme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", STATE.theme);
+  document.getElementById("themeIcon").className = STATE.theme === "dark" ? "fas fa-sun" : "fas fa-moon";
+};
+document.getElementById("clearChatBtn").onclick = () => { document.getElementById("chatWindow").innerHTML=""; STATE.sessionId=crypto.randomUUID(); };
+document.getElementById("chatWindow").onscroll = () => {
+  const e = document.getElementById("chatWindow");
+  document.getElementById("scrollDownBtn").classList.toggle("show", e.scrollHeight - e.scrollTop - e.clientHeight > 120);
+};
+document.getElementById("scrollDownBtn").onclick = () => UI.scrollToBottom();
+
+// Boot
+async function boot() {
+  TTSModule.init();
+  document.documentElement.setAttribute("data-theme", STATE.theme);
+  document.getElementById("themeIcon").className = STATE.theme === "dark" ? "fas fa-sun" : "fas fa-moon";
+  
+  try {
+    const res = await fetch("/api/init");
+    const data = await res.json();
+    document.getElementById("dbStatus").innerHTML = `<i class="fas fa-circle" style="color:#06D6A0;font-size:9px"></i> متصل · ${data.count} منتج`;
+    document.getElementById("welcomeMsg").innerHTML = `<div dir="auto">مرحباً يا بطل المبيعات! 💼<br>أنا <strong>العربى</strong>، مساعدك الذكي.<br>اكتب <strong>اسم المنتج</strong> أو الكود للبحث الفوري، أو اطلب مني <strong>مقارنة</strong> بين منتجات محددة.</div>`;
+    document.getElementById("messageInput").disabled = false;
+    document.getElementById("sendButton").disabled = false;
+  } catch(e) {
+    document.getElementById("dbStatus").innerHTML = `<i class="fas fa-circle" style="color:#FF4757;font-size:9px"></i> خطأ بالاتصال`;
+  }
+}
+boot();
+</script>
+</body>
+</html>
