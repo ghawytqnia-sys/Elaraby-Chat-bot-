@@ -79,6 +79,12 @@ html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:
 .bubble.bot strong{color:var(--brand-1)}[data-theme="dark"] .bubble.bot strong{color:var(--brand-2)}
 .price-tag{display:inline-flex;align-items:center;gap:5px;background:var(--price-bg);color:var(--price-c);padding:4px 12px;border-radius:8px;font-weight:800;border:1px solid var(--price-b);font-size:14px}
 
+.bubble.bot p { margin-bottom: 10px; }
+.bubble.bot ul, .bubble.bot ol { padding-right: 22px; padding-left: 0; margin: 8px 0 12px; list-style-type: disc; }
+.bubble.bot li { margin-bottom: 8px; padding-right: 4px; line-height: 1.6; }
+.bubble.bot code { background: var(--surface-3); color: var(--brand-1); padding: 2px 6px; border-radius: 6px; font-size: 13px; font-family: monospace; }
+[data-theme="dark"] .bubble.bot code { color: var(--brand-2); }
+.quick-actions i { margin-left: 4px; }
 .msg-actions{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
 .msg-action-btn{display:flex;align-items:center;gap:4px;padding:3px 9px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:700;color:var(--text-sec);cursor:pointer;transition:all .2s}
 .msg-action-btn:hover{background:var(--brand-1);color:#fff}
@@ -515,6 +521,12 @@ async function boot() {
   }
 }
 boot();
+  function quickAsk(action, productName) {
+    const input = document.getElementById("messageInput");
+    input.value = `${action} ${productName}`;
+    input.style.height = "auto";
+    sendMessage(); 
+  }
 </script>
 </body>
 </html>
