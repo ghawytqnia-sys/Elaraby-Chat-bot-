@@ -449,17 +449,31 @@ document.getElementById("messageInput").addEventListener("input", e => {
   const q = e.target.value.trim();
   if(q.length < 2) { document.getElementById("acDropdown").classList.remove("open"); return; }
   
-  debounceTimer = setTimeout(async () => {
-    const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`)
-    const results = await res.json();
-    const dd = document.getElementById("acDropdown");
-    if(!results.length) { dd.innerHTML="<div class='ac-empty'>لا توجد نتائج</div>"; }
-    else {
-      dd.innerHTML = results.map(p => `<div class="ac-item" onclick="insertChip('${p.name}'); UI.showQuickActions('${p.name}')"><div class="ac-item-icon"><i class="fas fa-box"></i></div><div class="ac-item-body"><div class="ac-item-name">${p.name}</div><div class="ac-item-price">${p.price}</div></div></div>`).join("");
+debounceTimer = setTimeout(async () => {
+    try {
+        const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`);
+        if (!res.ok) return;
+        
+        const results = await res.json();
+        const dd = document.getElementById("acDropdown");
+        
+        if(!results || results.length === 0) { 
+            dd.innerHTML="<div class='ac-empty'>لا توجد نتائج مطابقة</div>"; 
+        } else {
+            dd.innerHTML = results.map(p => `
+                <div class="ac-item" onclick="insertChip('${p.name.replace(/'/g, "\\'")}'); UI.showQuickActions('${p.name.replace(/'/g, "\\'")}')">
+                    <div class="ac-item-icon"><i class="fas fa-box"></i></div>
+                    <div class="ac-item-body">
+                        <div class="ac-item-name">${p.name}</div>
+                        <div class="ac-item-price">${p.price}</div>
+                    </div>
+                </div>`).join("");
+        }
+        dd.classList.add("open");
+    } catch (err) {
+        console.error("Autocomplete error:", err);
     }
-    dd.classList.add("open");
-  }, 200);
-});
+}, 200);
 
 function insertChip(val) {
   const i = document.getElementById("messageInput");
