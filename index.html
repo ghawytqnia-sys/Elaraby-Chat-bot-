@@ -259,34 +259,26 @@ const UI = {
   },
   escape(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); },
   scrollToBottom() { const el = document.getElementById("chatWindow"); el.scrollTop = el.scrollHeight; },
+parseMarkdown(text) {
+  
+    return marked.parse(text)
+      .replace(/<table>/g, '<div class="ai-compare-table-wrapper"><table class="ai-compare-table" dir="rtl">')
+      .replace(/<\/table>/g, '</table></div>');
+  },
+
   showQuickActions(name) {
     const row = document.createElement("div");
     row.className = "msg-row bot";
     row.innerHTML = `<div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
       <div style="width:100%"><div class="bubble bot" dir="auto">
-        <strong>اخترت: ${this.escape(name)}</strong><br>
-        <div class="quick-actions">
-          <button class="quick-action-btn" onclick="insertChip('سعر ${this.escape(name)}')">السعر</button>
-          <button class="quick-action-btn" onclick="insertChip('مواصفات ${this.escape(name)}')">المواصفات</button>
-          <button class="quick-action-btn" onclick="UI.askCompare('${this.escape(name)}')">مقارنة</button>
-        </div>
-      </div></div>`;
-    document.getElementById("chatWindow").appendChild(row);
-    this.scrollToBottom();
-  },
-  askCompare(name) {
-    const row = document.createElement("div");
-    row.className = "msg-row bot";
-    row.innerHTML = `<div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
-      <div style="width:100%"><div class="bubble bot" dir="auto">
-        <strong>مقارنة المنتج:</strong> ${name}<br>
-        <div class="pro-comp-container">
-            <div class="pro-comp-card internal" onclick="UI.startCompare('LOCAL_COMPARE', '${name}')">
-                <div class="pro-comp-icon"><i class="fas fa-store"></i></div><h4>منتج من العربى</h4>
-            </div>
-            <div class="pro-comp-card external" onclick="UI.startCompare('AI_COMPARE', '${name}')">
-                <div class="pro-comp-icon"><i class="fas fa-globe"></i></div><h4>منافس خارجي</h4>
-            </div>
+        <strong>ممتاز! اخترت: ${this.escape(name)}</strong><br>
+        <span style="color:var(--text-sec);font-size:13px">ماذا تريد أن تعرف عن هذا المنتج؟</span>
+        <div class="quick-actions" style="margin-top:10px">
+          <button class="quick-action-btn" onclick="quickAsk('السعر','${this.escape(name)}')"><i class="fas fa-tag"></i> السعر</button>
+          <button class="quick-action-btn" onclick="quickAsk('المواصفات','${this.escape(name)}')"><i class="fas fa-list-check"></i> المواصفات</button>
+          <button class="quick-action-btn" onclick="quickAsk('صور','${this.escape(name)}')"><i class="fas fa-images"></i> الصور</button>
+          <button class="quick-action-btn" onclick="quickAsk('أقنعني بشراء','${this.escape(name)}')"><i class="fas fa-magic" style="color:#f59e0b"></i> خطة البيع</button>
+          <button class="quick-action-btn" onclick="UI.askCompare('${this.escape(name)}')"><i class="fas fa-scale-balanced" style="color:#3b82f6"></i> مقارنة</button>
         </div>
       </div></div>`;
     document.getElementById("chatWindow").appendChild(row);
@@ -418,7 +410,7 @@ async function sendMessage() {
         const data = JSON.parse(dataStr);
         if(data.type === 'token') {
           fullText += data.text;
-          botBubble.innerHTML = `<div dir="auto">${marked.parse(fullText)}</div>`;
+          botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(fullText)}</div>`;
           UI.scrollToBottom();
         } else if (data.type === 'local') {
           if (data.is_table) botRow.classList.add("has-table");
