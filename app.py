@@ -357,31 +357,45 @@ async def index(request: Request):
 @app.get("/api/init")
 async def init_data():
     now = time.time()
+    # إذا كانت القائمة فارغة أو مر عليها وقت طويل، اسحب البيانات
     if not GLOBAL_STATE["cached_products"] or (now - GLOBAL_STATE["last_fetch"] > PRODUCT_CACHE_TTL):
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.get(FIREBASE_URL)
                 data = resp.json()
+                
                 if data:
                     products = []
-                    for k, p in data.items():
-                        name = p.get("name", p.get("title", p.get("productName", p.get("اسم", ""))))
-                        if not name: continue
+                    # تحويل البيانات سواء كانت قائمة أو قاموس
+                    items = data.values() if isinstance(data, dict) else data
+                    
+                    for p in items:
+                        if not p: continue
+                        
+                        # محاولة إيجاد الاسم بكل الاحتمالات الممكنة في بيانات العربي
+                        name = (p.get("name") or p.get("title") or p.get("productName") or 
+                                p.get("اسم") or p.get("اسم_المنتج") or p.get("title_ar") or "")
+                        
+                        if not name: continue # إذا لم نجد اسماً أبداً، نتجاوز المنتج
+                        
                         products.append({
-                            "id": k,
-                            "name": name,
-                            "price": p.get("price", p.get("Price", p.get("سعر", "غير متوفر"))),
-                            "specs": re.sub(r'<[^>]*>', '', str(p.get("details", p.get("specs", p.get("desc", ""))))).strip(),
-                            "sku": p.get("id", p.get("sku", p.get("SKU", p.get("code", k)))),
-                            "brand": p.get("brand", p.get("Brand", p.get("ماركة", ""))),
-                            "stock": p.get("stock", p.get("quantity", None)),
-                            "warranty": p.get("warranty", p.get("الضمان", "")),
-                            "images": p.get("images", p.get("imgs", p.get("صور", []))),
-                            "colors": p.get("colors", p.get("ألوان", [])),
+                            "id": str(p.get("id", p.get("sku", uuid.uuid4()))),
+                            "name": str(name),
+                            "price": str(p.get("price", p.get("Price", p.get("سعر", "غير متوفر")))),
+                            "specs": re.sub(r'<[^>]*>', '', str(p.get("details", p.get("specs", p.get("desc", p.get("description", "")))))),
+                            "sku": str(p.get("sku", p.get("code", p.get("id", "")))),
+                            "brand": str(p.get("brand", p.get("Brand", p.get("ماركة", "")))),
+                            "stock": p.get("stock", p.get("quantity", "متوفر")),
+                            "warranty": str(p.get("warranty", p.get("الضمان", ""))),
+                            "images": p.get("images", p.get("imgs", [p.get("image", "")])),
                         })
+                    
                     GLOBAL_STATE["cached_products"] = products
                     GLOBAL_STATE["last_fetch"] = now
+                    # مسح الكاش القديم عند تحديث البيانات
+                    GLOBAL_STATE["search_cache"] = {}
         except Exception as e:
+            print(f"Error fetching data: {e}")
             return JSONResponse({"status": "error", "message": str(e)})
             
     return {"status": "success", "count": len(GLOBAL_STATE["cached_products"])}
