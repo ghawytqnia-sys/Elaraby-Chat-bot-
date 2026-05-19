@@ -451,6 +451,7 @@ document.getElementById("messageInput").addEventListener("input", e => {
   
 debounceTimer = setTimeout(async () => {
     try {
+        // تأكد من استخدام الرابط الكامل الخاص بـ Hugging Face
         const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`);
         if (!res.ok) return;
         
@@ -474,6 +475,7 @@ debounceTimer = setTimeout(async () => {
         console.error("Autocomplete error:", err);
     }
 }, 200);
+});
 
 function insertChip(val) {
   const i = document.getElementById("messageInput");
