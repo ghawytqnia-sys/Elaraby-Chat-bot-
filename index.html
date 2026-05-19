@@ -248,7 +248,7 @@ const UI = {
     if (id) row.id = id;
 
     const avatar = `<div class="msg-avatar ${isUser?"user":"bot"}"><i class="fas ${isUser?"fa-user":(loading?"fa-circle-notch fa-spin":"fa-robot")}"></i></div>`;
-    const content = loading ? `<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>` : (isUser ? `<span dir="auto">${this.escape(text)}</span>` : `<div dir="auto">${isRawHTML ? text : marked.parse(text)}</div>`);
+    const content = loading ? `<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>` : (isUser ? `<span dir="auto">${this.escape(text)}</span>` : `<div dir="auto">${isRawHTML ? text : this.parseMarkdown(text)}</div>`);
     
     const actions = (!isUser && !loading && !isRawHTML) ? `<div class="msg-actions"><button class="msg-action-btn" onclick="UI.copyBubble(this)"><i class="fas fa-copy"></i> نسخ</button></div>` : "";
     
@@ -259,8 +259,7 @@ const UI = {
   },
   escape(str) { return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); },
   scrollToBottom() { const el = document.getElementById("chatWindow"); el.scrollTop = el.scrollHeight; },
-parseMarkdown(text) {
-  
+  parseMarkdown(text) {
     return marked.parse(text)
       .replace(/<table>/g, '<div class="ai-compare-table-wrapper"><table class="ai-compare-table" dir="rtl">')
       .replace(/<\/table>/g, '</table></div>');
@@ -284,20 +283,46 @@ parseMarkdown(text) {
     document.getElementById("chatWindow").appendChild(row);
     this.scrollToBottom();
   },
+  askCompare(name) {
+    const row = document.createElement("div");
+    row.className = "msg-row bot";
+    row.innerHTML = `<div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
+      <div style="width:100%"><div class="bubble bot" dir="auto">
+        <strong>مقارنة المنتج:</strong> ${name}<br>
+        <div class="pro-comp-container">
+            <div class="pro-comp-card internal" onclick="UI.startCompare('LOCAL_COMPARE', '${name}')">
+                <div class="pro-comp-icon"><i class="fas fa-store"></i></div><h4>منتج من العربى</h4>
+            </div>
+            <div class="pro-comp-card external" onclick="UI.startCompare('AI_COMPARE', '${name}')">
+                <div class="pro-comp-icon"><i class="fas fa-globe"></i></div><h4>منافس خارجي</h4>
+            </div>
+        </div>
+      </div></div>`;
+    document.getElementById("chatWindow").appendChild(row);
+    this.scrollToBottom();
+  },
   startCompare(type, name) {
     STATE.pendingAction = { type: type, productA: name };
     const inp = document.getElementById("messageInput");
-    inp.placeholder = type === 'LOCAL_COMPARE' ? "اكتب المنتج الثاني من العربي..." : "اكتب اسم الماركة والموديل المنافس...";
+    inp.value = "";
+    if (type === 'LOCAL_COMPARE') {
+        inp.placeholder = "اكتب اسم الموديل الآخر من العربي هنا...";
+        this.addMessage("ممتاز، لقد اخترت <b>المقارنة المحلية</b>.<br>من فضلك اكتب اسم أو كود المنتج الثاني التابع لنا:", false, false, null, true);
+    } else {
+        inp.placeholder = "اكتب الماركة وكود المنتج المنافس...";
+        this.addMessage("ممتاز، لقد اخترت <b>المقارنة الخارجية</b>.<br>اكتب <u>الماركة والكود</u> الخاص بالمنتج المنافس:", false, false, null, true);
+    }
     inp.focus();
   },
   buildGallery(product) {
     const imgs = product.images || [];
-    if(!imgs.length) return `<div class="bubble bot">لا توجد صور.</div>`;
+    if(!imgs || !imgs.length) return `<div class="bubble bot">عذراً، لا توجد صور متوفرة لهذا المنتج حالياً.</div>`;
     return `<div class="bubble bot" style="padding:8px">
       <strong>📷 ${this.escape(product.name)}</strong>
       <div class="product-gallery" onclick="openLightbox('${imgs[0]}')">
         <div class="gallery-main"><img class="gallery-main-img" src="${imgs[0]}"></div>
       </div>
+      <small style="color:var(--brand-1); cursor:pointer;" onclick="openLightbox('${imgs[0]}')">اضغط لتكبير الصورة</small>
     </div>`;
   },
   copyBubble(btn) {
@@ -408,13 +433,17 @@ async function sendMessage() {
         if(!dataStr) continue;
         
         const data = JSON.parse(dataStr);
-        if(data.type === 'token') {
+if(data.type === 'token') {
           fullText += data.text;
           botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(fullText)}</div>`;
           UI.scrollToBottom();
         } else if (data.type === 'local') {
-          if (data.is_table) botRow.classList.add("has-table");
-          botBubble.innerHTML = `<div dir="auto">${data.html}</div>`;
+          if (data.is_table) {
+              botRow.classList.add("has-table");
+              botBubble.innerHTML = `<div dir="auto">${data.html}</div>`; // الجداول تأتي جاهزة
+          } else {
+              botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(data.html)}</div>`; // تحويل المواصفات لماركدوان
+          }
           fullText = botBubble.innerText;
           UI.scrollToBottom();
         } else if (data.type === 'gallery') {
