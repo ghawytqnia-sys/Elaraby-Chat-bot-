@@ -384,7 +384,8 @@ async function sendMessage() {
   const botBubble = botRow.querySelector(".bubble.bot");
 
   try {
-    const res = await fetch("/api/chat", {
+ 
+    const res = await fetch("https://abokyan-elaraby-ai.hf.space/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({text: text, session_id: STATE.sessionId, pending_action: STATE.pendingAction})
@@ -448,8 +449,9 @@ document.getElementById("messageInput").addEventListener("input", e => {
   
   debounceTimer = setTimeout(async () => {
     try {
-        const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`);
         if (!res.ok) return;
+      
         const results = await res.json();
         const dd = document.getElementById("acDropdown");
         if(!results || results.length === 0) { dd.innerHTML="<div class='ac-empty'>لا توجد نتائج مطابقة</div>"; } 
@@ -500,13 +502,15 @@ async function boot() {
   document.getElementById("themeIcon").className = STATE.theme === "dark" ? "fas fa-sun" : "fas fa-moon";
   
   try {
-    const res = await fetch("/api/init");
+    
+    const res = await fetch("https://abokyan-elaraby-ai.hf.space/api/init");
     const data = await res.json();
     document.getElementById("dbStatus").innerHTML = `<i class="fas fa-circle" style="color:#06D6A0;font-size:9px"></i> متصل · ${data.count} منتج`;
-    document.getElementById("welcomeMsg").innerHTML = `<div dir="auto">مرحباً يا بطل المبيعات! 💼<br>أنا <strong>العربى</strong>، مساعدك الذكي المبرمج بالـ Python.<br>اكتب <strong>اسم المنتج</strong> أو الكود للبحث الفوري، أو اطلب مني <strong>مقارنة</strong>.</div>`;
+    document.getElementById("welcomeMsg").innerHTML = `<div dir="auto">مرحباً يا بطل المبيعات! 💼<br>أنا <strong>العربى</strong>، مساعدك الذكي.<br>اكتب <strong>اسم المنتج</strong> أو الكود للبحث الفوري، أو اطلب مني <strong>مقارنة</strong>.</div>`;
     document.getElementById("messageInput").disabled = false;
     document.getElementById("sendButton").disabled = false;
   } catch(e) {
+    console.error("Connection Error:", e);
     document.getElementById("dbStatus").innerHTML = `<i class="fas fa-circle" style="color:#FF4757;font-size:9px"></i> خطأ بالاتصال`;
   }
 }
