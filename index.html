@@ -148,15 +148,37 @@ html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:
 .footer-btn.mic.listening{background:#FF4757;color:#fff;border-color:#FF4757;animation:mic-pulse .8s ease-in-out infinite}
 @keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,71,87,.5)}50%{box-shadow:0 0 0 8px rgba(255,71,87,0)}}
 
-.product-gallery{border-radius:14px;overflow:hidden;background:var(--surface-3);border:1px solid var(--border);margin:10px 0;}
-.gallery-main{position:relative;width:100%;padding-bottom:66%;background:#f0f0f0;overflow:hidden; cursor: pointer;}
-.gallery-main-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+/* ================= SWIPE GALLERY & ADVANCED LIGHTBOX ================= */
+.product-gallery { border-radius:14px; overflow:hidden; background:var(--surface-3); border:1px solid var(--border); margin:10px 0; touch-action:pan-y; }
+.gallery-main { position:relative; width:100%; padding-bottom:66%; background:#f0f0f0; overflow:hidden; cursor:grab; }
+.gallery-main:active { cursor:grabbing; }
+[data-theme="dark"] .gallery-main { background:#1a2030; }
+.gallery-main-img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transition:transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; user-select:none; -webkit-user-drag:none; }
+.gallery-main-img.loading { opacity:0; }
+.gallery-counter { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.55); color:#fff; font-size:11px; font-weight:700; padding:2px 10px; border-radius:10px; pointer-events:none; z-index:5; font-family:'Cairo',sans-serif; }
+.gallery-swipe-hint { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); color:#fff; padding:4px 8px; border-radius:12px; font-size:10px; z-index:10; pointer-events:none; opacity:0; transition:opacity 0.3s; }
+.gallery-main:hover .gallery-swipe-hint { opacity:1; }
+.gallery-thumbs { display:flex; gap:7px; padding:10px 12px; overflow-x:auto; scrollbar-width:none; background:var(--surface-3); border-top:1px solid var(--border); }
+.gallery-thumbs::-webkit-scrollbar { display:none; }
+.gallery-thumb { width:52px; height:52px; border-radius:8px; object-fit:cover; cursor:pointer; border:2px solid transparent; transition:all .2s; flex-shrink:0; opacity:.7; }
+.gallery-thumb.active { border-color:var(--brand-1); opacity:1; }
+.gallery-thumb:hover { opacity:1; }
 
-.lightbox{position:fixed;inset:0;background:var(--lb-bg);z-index:9000;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .28s}
-.lightbox.open{display:flex;opacity:1}
-.lightbox-inner{position:relative;max-width:100vw;max-height:100vh;display:flex;align-items:center;justify-content:center;width:100%;height:100%;overflow:hidden;}
-.lightbox-img{max-width:95vw;max-height:88vh;object-fit:contain;border-radius:10px;transform:scale(1);}
-.lb-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:9001}
+.color-swatches { display:flex; gap:8px; padding:8px 12px; flex-wrap:wrap; border-top:1px solid var(--border); }
+.color-swatch { width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all .2s; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.color-swatch.active { border-color:var(--brand-1); transform:scale(1.15); }
+
+/* ================= LIGHTBOX STYLING ================= */
+.lightbox { position:fixed; inset:0; background:var(--lb-bg); z-index:9000; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .28s; }
+.lightbox.open { display:flex; opacity:1; }
+.lightbox-inner { position:relative; max-width:100vw; max-height:100vh; display:flex; align-items:center; justify-content:center; touch-action:none; width:100%; height:100%; overflow:hidden; }
+.lightbox-img { max-width:95vw; max-height:88vh; object-fit:contain; border-radius:10px; transform-origin:center; transition:transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s; user-select:none; -webkit-user-drag:none; }
+.lb-close { position:fixed; top:16px; right:16px; background:rgba(255,255,255,0.15); border:none; color:#fff; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background .2s; z-index:9001; }
+.lb-close:hover { background:rgba(255,255,255,0.3); }
+.lb-nav { position:fixed; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.12); border:none; color:#fff; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background .2s; z-index:9001; }
+.lb-nav:hover { background:rgba(255,255,255,0.25); }
+.lb-prev { right:16px; }
+.lb-next { left:16px; }
 
 .copy-toast{position:fixed;bottom:30px;right:50%;transform:translateX(50%) translateY(20px);background:#1e293b;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;}
 .copy-toast.show{opacity:1;transform:translateX(50%) translateY(0)}
@@ -221,11 +243,13 @@ html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:
   </div>
 </div>
 
-<!-- LIGHTBOX -->
-<div class="lightbox" id="lightbox">
-  <button class="lb-close" id="lbClose"><i class="fas fa-xmark"></i></button>
+<!-- ADVANCED LIGHTBOX CONTAINER -->
+<div class="lightbox" id="lightbox" role="dialog" aria-label="عرض الصورة">
+  <button class="lb-close" id="lbClose" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="السابقة"><i class="fas fa-chevron-right"></i></button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="التالية"><i class="fas fa-chevron-left"></i></button>
   <div class="lightbox-inner" id="lbInner">
-    <img class="lightbox-img" id="lbImg" src="">
+    <img class="lightbox-img" id="lbImg" src="" alt="صورة المنتج">
   </div>
 </div>
 
@@ -238,6 +262,9 @@ const STATE = {
   theme: localStorage.getItem("zeko_theme") || "light",
   isStreaming: false,
   pendingAction: null,
+  lbImages: [],
+  lbIndex: 0,
+  lbScale: 1
 };
 
 // ================= UI & DOM =================
@@ -314,22 +341,254 @@ const UI = {
     }
     inp.focus();
   },
+
   buildGallery(product) {
-    const imgs = product.images || [];
-    if(!imgs || !imgs.length) return `<div class="bubble bot">عذراً، لا توجد صور متوفرة لهذا المنتج حالياً.</div>`;
-    return `<div class="bubble bot" style="padding:8px">
-      <strong>📷 ${this.escape(product.name)}</strong>
-      <div class="product-gallery" onclick="openLightbox('${imgs[0]}')">
-        <div class="gallery-main"><img class="gallery-main-img" src="${imgs[0]}"></div>
+    const images = product.images || [];
+    const colors = product.colors || [];
+    if (!images.length && !colors.length) return `<div class="bubble bot">عذراً، لا توجد صور متوفرة لهذا المنتج.</div>`;
+
+    const allImages = images.length ? images : (colors.flatMap(c => c.images || [c.image]).filter(Boolean));
+    if (!allImages.length) return `<div class="bubble bot">عذراً، لا توجد صور متوفرة لهذا المنتج.</div>`;
+
+    const thumbsHTML = allImages.map((src, i) =>
+      `<img class="gallery-thumb${i===0?" active":""}" src="${UI.escape(src)}" alt="صورة ${i+1}" loading="lazy" data-idx="${i}" onerror="this.style.display='none'">`
+    ).join("");
+
+    const colorSwatches = colors.length ? `<div class="color-swatches">${colors.map((c,i)=>`<div class="color-swatch${i===0?" active":""}" style="background:${UI.escape(c.hex||c.color||'#ccc')}" title="${UI.escape(c.name||'')}" data-cidx="${i}" data-images='${JSON.stringify(c.images||[c.image]||[])}'></div>`).join("")}</div>` : "";
+
+    return `<div class="bubble bot" style="padding:8px" dir="auto">
+      <strong>📷 صور المنتج: ${UI.escape(product.name)}</strong>
+      <div class="product-gallery" data-images='${UI.escape(JSON.stringify(allImages))}'>
+        <div class="gallery-main">
+          <div class="gallery-swipe-hint"><i class="fas fa-arrows-left-right"></i> اسحب للتقليب</div>
+          <img src="${UI.escape(allImages[0])}" alt="صورة المنتج" class="gallery-main-img" data-idx="0">
+          ${allImages.length > 1 ? `<div class="gallery-counter">1 / ${allImages.length}</div>` : ""}
+        </div>
+        ${allImages.length > 1 ? `<div class="gallery-thumbs">${thumbsHTML}</div>` : ""}
+        ${colorSwatches}
       </div>
-      <small style="color:var(--brand-1); cursor:pointer;" onclick="openLightbox('${imgs[0]}')">اضغط لتكبير الصورة</small>
+      <small style="color:var(--brand-1); cursor:pointer;" onclick="const img=this.previousElementSibling.querySelector('.gallery-main-img'); Gallery.openLightbox(img, JSON.parse(this.previousElementSibling.dataset.images))">اضغط لتكبير الصورة</small>
     </div>`;
   },
+
   copyBubble(btn) {
     const txt = btn.closest(".msg-row").querySelector(".bubble").innerText;
     navigator.clipboard.writeText(txt);
     document.getElementById("copyToast").classList.add("show");
     setTimeout(()=>document.getElementById("copyToast").classList.remove("show"), 2000);
+  }
+};
+
+// ================= MODULE: IMAGE GALLERY (SWIPE & INTERACTION) =================
+const Gallery = {
+  wireGallery(galleryEl) {
+    const images = JSON.parse(galleryEl.dataset.images || "[]");
+    const mainImg = galleryEl.querySelector(".gallery-main-img");
+    const counter = galleryEl.querySelector(".gallery-counter");
+    const thumbs  = galleryEl.querySelectorAll(".gallery-thumb");
+    const mainImgDiv = galleryEl.querySelector('.gallery-main');
+
+    const updateView = (idx) => {
+      if(!mainImg || !images[idx]) return;
+      mainImg.style.opacity = "0";
+      setTimeout(() => { 
+        mainImg.src = images[idx]; 
+        mainImg.dataset.idx = idx; 
+        mainImg.style.opacity = "1"; 
+      }, 150);
+      if(counter) counter.textContent = `${idx+1} / ${images.length}`;
+      thumbs.forEach((t,i) => t.classList.toggle("active", i === idx));
+      if(thumbs[idx]) thumbs[idx].scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" });
+    };
+
+    galleryEl.querySelectorAll(".color-swatch").forEach(swatch => {
+      swatch.addEventListener("click", () => {
+        const imgs = JSON.parse(swatch.dataset.images || "[]");
+        if (!imgs.length) return;
+        galleryEl.dataset.images = JSON.stringify(imgs);
+        galleryEl.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+        swatch.classList.add("active");
+        
+        const thumbsContainer = galleryEl.querySelector(".gallery-thumbs");
+        if (thumbsContainer) {
+          thumbsContainer.innerHTML = imgs.map((src,i) =>
+            `<img class="gallery-thumb${i===0?" active":""}" src="${UI.escape(src)}" loading="lazy" data-idx="${i}">`
+          ).join("");
+        }
+        this.wireGallery(galleryEl); 
+        updateView(0);
+      });
+    });
+
+    if(images.length <= 1) {
+        if(mainImg) mainImg.onclick = () => this.openLightbox(mainImg, images);
+        return;
+    }
+
+    thumbs.forEach(thumb => thumb.addEventListener("click", () => updateView(parseInt(thumb.dataset.idx))));
+    
+    // Swipe Handler
+    let startX = 0, currentX = 0, isDragging = false;
+    
+    if (mainImgDiv) {
+        mainImgDiv.addEventListener('touchstart', e => {
+          if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            mainImg.style.transition = "none"; 
+          }
+        }, {passive: true});
+
+        mainImgDiv.addEventListener('touchmove', e => {
+          if (!isDragging) return;
+          currentX = e.touches[0].clientX;
+          const diff = currentX - startX;
+          mainImg.style.transform = `translateX(${diff * 0.8}px)`; 
+        }, {passive: false});
+
+        mainImgDiv.addEventListener('touchend', e => {
+          if (!isDragging) return;
+          isDragging = false;
+          mainImg.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s";
+          mainImg.style.transform = "translateX(0)";
+          
+          let diff = e.changedTouches[0].clientX - startX;
+          let currIdx = parseInt(mainImg.dataset.idx || "0");
+          if (diff > 60) { 
+             updateView((currIdx - 1 + images.length) % images.length);
+          } else if (diff < -60) { 
+             updateView((currIdx + 1) % images.length);
+          } else { 
+             if(Math.abs(diff) < 10) this.openLightbox(mainImg, JSON.parse(galleryEl.dataset.images || "[]"));
+          }
+        });
+        
+        mainImgDiv.onmousedown = (e) => {
+            startX = e.clientX; isDragging = true; mainImg.style.transition = "none";
+        };
+        mainImgDiv.onmousemove = (e) => {
+            if(!isDragging) return;
+            const diff = e.clientX - startX;
+            mainImg.style.transform = `translateX(${diff * 0.8}px)`;
+        };
+        mainImgDiv.onmouseup = mainImgDiv.onmouseleave = (e) => {
+            if(!isDragging) return;
+            isDragging = false;
+            mainImg.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s";
+            mainImg.style.transform = "translateX(0)";
+            let diff = e.clientX - startX;
+            let currIdx = parseInt(mainImg.dataset.idx || "0");
+            if (diff > 60) updateView((currIdx - 1 + images.length) % images.length);
+            else if (diff < -60) updateView((currIdx + 1) % images.length);
+            else if(Math.abs(diff) < 10) this.openLightbox(mainImg, JSON.parse(galleryEl.dataset.images || "[]"));
+        };
+    }
+  },
+
+  openLightbox(imgEl, images) {
+    const idx = parseInt(imgEl.dataset.idx || "0");
+    STATE.lbImages = images;
+    STATE.lbIndex  = idx;
+    STATE.lbScale  = 1;
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    lbImg.src = images[idx] || imgEl.src;
+    lbImg.style.transform = "scale(1)";
+    lb.classList.add("open");
+    document.getElementById("lbPrev").style.display = images.length > 1 ? "" : "none";
+    document.getElementById("lbNext").style.display = images.length > 1 ? "" : "none";
+  },
+
+  closeLightbox() {
+    document.getElementById("lightbox").classList.remove("open");
+    STATE.lbImages = []; STATE.lbIndex = 0; STATE.lbScale = 1;
+  },
+
+  initLightboxEvents() {
+    const lb    = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    const lbInner = document.getElementById("lbInner");
+
+    document.getElementById("lbClose").addEventListener("click", () => this.closeLightbox());
+    
+    const nav = (dir) => {
+      if (!STATE.lbImages.length) return;
+      STATE.lbIndex = (STATE.lbIndex + dir + STATE.lbImages.length) % STATE.lbImages.length;
+      STATE.lbScale = 1;
+      lbImg.style.opacity = "0";
+      setTimeout(() => { 
+          lbImg.src = STATE.lbImages[STATE.lbIndex]; 
+          lbImg.style.transform = "scale(1)"; 
+          lbImg.style.opacity = "1"; 
+      }, 200);
+    };
+
+    document.getElementById("lbPrev").addEventListener("click", () => nav(-1));
+    document.getElementById("lbNext").addEventListener("click", () => nav(1));
+    lb.addEventListener("click", e => { if (e.target === lb) this.closeLightbox(); });
+    
+    document.addEventListener("keydown", e => {
+      if (!lb.classList.contains("open")) return;
+      if (e.key === "Escape")     this.closeLightbox();
+      if (e.key === "ArrowRight") nav(-1);
+      if (e.key === "ArrowLeft")  nav(1);
+    });
+
+    let lastTap = 0;
+    lbImg.addEventListener("dblclick", () => {
+      STATE.lbScale = STATE.lbScale > 1 ? 1 : 2.5;
+      lbImg.style.transform = `scale(${STATE.lbScale})`;
+    });
+    
+    // Zoom Gestures
+    let initDist = 0, initScale = 1, startX = 0, isDragging = false;
+    
+    lbInner.addEventListener("touchstart", e => {
+      if (e.touches.length === 2) {
+        initDist  = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+        initScale = STATE.lbScale;
+      } else if (e.touches.length === 1 && STATE.lbScale === 1) {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+        lbImg.style.transition = "none";
+      }
+    }, { passive: true });
+    
+    lbInner.addEventListener("touchmove", e => {
+      if (e.touches.length === 2) {
+        const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+        STATE.lbScale = Math.min(Math.max(initScale * (dist / initDist), 0.5), 5);
+        lbImg.style.transform = `scale(${STATE.lbScale})`;
+      } else if (isDragging && STATE.lbScale === 1) {
+        const diff = e.touches[0].clientX - startX;
+        lbImg.style.transform = `translateX(${diff}px)`;
+      }
+    }, { passive: true });
+    
+    lbInner.addEventListener("touchend", e => {
+      const now = Date.now();
+      if (now - lastTap < 300 && e.changedTouches.length === 1) {
+        STATE.lbScale = STATE.lbScale > 1 ? 1 : 2.5;
+        lbImg.style.transform = `scale(${STATE.lbScale})`;
+      }
+      lastTap = now;
+      
+      if (isDragging) {
+        isDragging = false;
+        lbImg.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s";
+        lbImg.style.transform = "translateX(0)";
+        let diff = e.changedTouches[0].clientX - startX;
+        if (diff > 70) nav(-1); 
+        else if (diff < -70) nav(1); 
+      }
+    });
+
+    lbInner.addEventListener("wheel", e => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      STATE.lbScale = Math.min(Math.max(STATE.lbScale * zoomFactor, 1), 5);
+      lbImg.style.transform = `scale(${STATE.lbScale})`;
+    }, { passive: false });
   }
 };
 
@@ -389,7 +648,7 @@ const STTModule = {
   }
 };
 
-// ================= BACKEND COMMUNICATION =================
+// ================= BACKEND COMMUNICATION WITH SSE =================
 async function sendMessage() {
   const inp = document.getElementById("messageInput");
   const text = inp.value.trim();
@@ -407,7 +666,6 @@ async function sendMessage() {
   const botBubble = botRow.querySelector(".bubble.bot");
 
   try {
- 
     const res = await fetch("https://abokyan-elaraby-ai.hf.space/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -418,39 +676,52 @@ async function sendMessage() {
     inp.placeholder = "اكتب اسم المنتج أو الموديل...";
 
     const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder("utf-8");
     let fullText = "";
+    let buffer = ""; // Resilient SSE packet buffer accumulator
     botBubble.innerHTML = "";
     
     while(true) {
       const {done, value} = await reader.read();
       if(done) break;
-      const chunks = decoder.decode(value).split("\n\n");
       
-      for(let chunk of chunks) {
-        if(!chunk.startsWith("data: ")) continue;
-        const dataStr = chunk.substring(6).trim();
-        if(!dataStr) continue;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop(); // Hold remaining fragmented buffer segment
+      
+      for(let line of lines) {
+        line = line.trim();
+        if(!line.startsWith("data: ")) continue;
+        const dataStr = line.substring(6).trim();
+        if(!dataStr || dataStr === "[DONE]") continue;
         
-        const data = JSON.parse(dataStr);
-if(data.type === 'token') {
-          fullText += data.text;
-          botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(fullText)}</div>`;
-          UI.scrollToBottom();
-        } else if (data.type === 'local') {
-          if (data.is_table) {
-              botRow.classList.add("has-table");
-              botBubble.innerHTML = `<div dir="auto">${data.html}</div>`; // الجداول تأتي جاهزة
-          } else {
-              botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(data.html)}</div>`; // تحويل المواصفات لماركدوان
+        try {
+          const data = JSON.parse(dataStr);
+          if(data.type === 'token') {
+            fullText += data.text;
+            if(fullText.includes("|--") || fullText.includes("---")) {
+                botRow.classList.add("has-table");
+            }
+            botBubble.innerHTML = `<div dir="auto">${UI.parseMarkdown(fullText)}</div>`;
+            UI.scrollToBottom();
+          } else if (data.type === 'local') {
+            if (data.is_table) botRow.classList.add("has-table");
+            botBubble.innerHTML = `<div dir="auto">${data.html ? data.html : UI.parseMarkdown(data.html)}</div>`;
+            fullText = botBubble.innerText;
+            UI.scrollToBottom();
+          } else if (data.type === 'gallery') {
+            botRow.querySelector('div[style="width:100%"]').innerHTML = UI.buildGallery(data.product);
+            const gal = botRow.querySelector('.product-gallery');
+            if(gal) Gallery.wireGallery(gal);
+            UI.scrollToBottom();
+          } else if (data.type === 'error') {
+            botBubble.innerHTML = `<div class="error-notice"><i class="fas fa-exclamation-triangle"></i> ${data.message}</div>`;
+            UI.scrollToBottom();
+          } else if (data.type === 'done') {
+            break;
           }
-          fullText = botBubble.innerText;
-          UI.scrollToBottom();
-        } else if (data.type === 'gallery') {
-          botRow.querySelector('div[style="width:100%"]').innerHTML = UI.buildGallery(data.product);
-          UI.scrollToBottom();
-        } else if (data.type === 'done') {
-          break;
+        } catch(e) {
+          console.warn("Fragile block recovered: parse skipped", e);
         }
       }
     }
@@ -476,7 +747,7 @@ document.getElementById("messageInput").addEventListener("input", e => {
   
   debounceTimer = setTimeout(async () => {
     try {
-        const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`);
+                const res = await fetch(`https://abokyan-elaraby-ai.hf.space/api/autocomplete?q=${encodeURIComponent(q)}`);
         if (!res.ok) return;
       
         const results = await res.json();
@@ -504,12 +775,6 @@ function insertChip(val) {
   document.getElementById("acDropdown").classList.remove("open");
 }
 
-function openLightbox(src) {
-  document.getElementById("lbImg").src = src;
-  document.getElementById("lightbox").classList.add("open");
-}
-document.getElementById("lbClose").onclick = () => document.getElementById("lightbox").classList.remove("open");
-
 document.getElementById("sendButton").onclick = sendMessage;
 document.getElementById("messageInput").onkeydown = e => { if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); } };
 document.getElementById("fabBtn").onclick = () => { document.getElementById("chatWrapper").classList.add("open"); document.getElementById("fabBtn").classList.add("hidden"); };
@@ -525,12 +790,12 @@ document.getElementById("clearChatBtn").onclick = () => { document.getElementByI
 // ================= BOOTSTRAP =================
 async function boot() {
   STTModule.init();
+  Gallery.initLightboxEvents();
   document.documentElement.setAttribute("data-theme", STATE.theme);
   document.getElementById("themeIcon").className = STATE.theme === "dark" ? "fas fa-sun" : "fas fa-moon";
   
   try {
-    
-    const res = await fetch("https://abokyan-elaraby-ai.hf.space/api/init");
+        const res = await fetch("https://abokyan-elaraby-ai.hf.space/api/init");
     const data = await res.json();
     document.getElementById("dbStatus").innerHTML = `<i class="fas fa-circle" style="color:#06D6A0;font-size:9px"></i> متصل · ${data.count} منتج`;
     document.getElementById("welcomeMsg").innerHTML = `<div dir="auto">مرحباً يا بطل المبيعات! 💼<br>أنا <strong>العربى</strong>، مساعدك الذكي.<br>اكتب <strong>اسم المنتج</strong> أو الكود للبحث الفوري، أو اطلب مني <strong>مقارنة</strong>.</div>`;
@@ -542,12 +807,12 @@ async function boot() {
   }
 }
 boot();
-  function quickAsk(action, productName) {
-    const input = document.getElementById("messageInput");
-    input.value = `${action} ${productName}`;
-    input.style.height = "auto";
-    sendMessage(); 
-  }
+function quickAsk(action, productName) {
+  const input = document.getElementById("messageInput");
+  input.value = `${action} ${productName}`;
+  input.style.height = "auto";
+  sendMessage(); 
+}
 </script>
 </body>
 </html>
